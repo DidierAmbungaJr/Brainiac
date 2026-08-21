@@ -4,6 +4,7 @@ from strands import Agent
 from strands.session.file_session_manager import FileSessionManager
 
 from src.config import create_model
+from src.response import ResponseCollector
 from src.tools.custom_tools import TOOLS
 
 SYSTEM_PROMPT = """Tu es un assistant utile, précis et concis.
@@ -22,10 +23,14 @@ def create_agent(
         session_id=session_id or os.getenv("AGENT_SESSION_ID", "user_session_123"),
         storage_dir=storage_dir or os.getenv("AGENT_SESSIONS_DIR", "./sessions"),
     )
-    return Agent(
+    collector = ResponseCollector()
+    agent = Agent(
         model=create_model(),
         tools=TOOLS,
         system_prompt=SYSTEM_PROMPT,
+        callback_handler=collector,
         session_manager=session_manager,
         load_tools_from_directory=True,
     )
+    agent.response_collector = collector
+    return agent
