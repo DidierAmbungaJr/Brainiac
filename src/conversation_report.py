@@ -68,7 +68,7 @@ def generate_conversation_report(
 ) -> dict[str, Any]:
     """Génère un rapport JSON prêt à être envoyé à Django."""
     transcript = messages if isinstance(messages, str) else format_transcript(messages)
-    if not transcript:
+    if not transcript.strip():
         raise ValueError("La conversation est vide.")
 
     report_agent = agent or create_report_agent()
