@@ -23,3 +23,11 @@ Onbora Core IA is currently a Python/Strands/Gemini brownfield POC. `src/` conta
 - Do not let Streamlit or synchronous POC dependencies enter the target domain core.
 
 <!-- /bmad:context -->
+
+## Authoritative Brownfield Inventory
+
+The approved baseline evidence and recorded, provisional retain/adapt/replace/retire
+decisions are in
+[_bmad-output/implementation-artifacts/brownfield-baseline-inventory.md](_bmad-output/implementation-artifacts/brownfield-baseline-inventory.md).
+It is anchored to `7c8434106bbd09fadbd410fd22b700f85693ca48`; POC behavior
+remains migration input and not MVP delivery.

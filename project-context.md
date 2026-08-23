@@ -15,3 +15,5 @@ retain, adapt, replace, or retire under Epic 0 before removing or rewriting it.
 
 Planning artifacts: `_bmad-output/planning-artifacts/`.
 Delivery status: `_bmad-output/implementation-artifacts/sprint-status.yaml`.
+Recorded, provisional classifications: [_bmad-output/implementation-artifacts/brownfield-baseline-inventory.md](_bmad-output/implementation-artifacts/brownfield-baseline-inventory.md), anchored to the approved evidence revision `7c8434106bbd09fadbd410fd22b700f85693ca48`.
+POC behavior remains migration input, not MVP delivery; the classifications require human approval.
