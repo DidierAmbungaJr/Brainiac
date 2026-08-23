@@ -1,0 +1,29 @@
+# BMad delivery status — reconciled after the brownfield assessment on 2026-08-23.
+project: onboracoreai
+updated: 2026-08-23
+epics:
+  - id: epic-0
+    title: Existing POC Reconciliation and Delivery Baseline
+    status: in-progress
+    stories:
+      - id: 0.1
+        title: Establish the Verified Brownfield Baseline
+        status: in-progress
+      - id: 0.2
+        title: Establish a Repeatable Runtime and Test Baseline
+        status: backlog
+  - id: epic-1
+    title: Integrable and Extensible AI Core
+    status: backlog
+  - id: epic-2
+    title: Trusted Orange Knowledge and Company Intelligence
+    status: backlog
+  - id: epic-3
+    title: Real-Time Field Copilot
+    status: backlog
+  - id: epic-4
+    title: CRM-Ready Visit Reports
+    status: backlog
+  - id: epic-5
+    title: Inbound Prospect Qualification and Lead Handoff
+    status: backlog
