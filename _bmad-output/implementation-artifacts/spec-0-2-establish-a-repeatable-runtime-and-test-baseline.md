@@ -129,3 +129,9 @@ Keep `create_report_orchestrator()` out of these unit tests because it construct
 
 - Preserves the strict-report-contract gap for Epic 4 work.
   [`deferred-work.md:1`](deferred-work.md#L1)
+
+### Review Findings
+
+- [x] [Review][Patch] Make the locked baseline installable across supported platforms [requirements.lock:72] — decision: support multiple platforms; regenerated with a Windows platform marker.
+- [x] [Review][Patch] Keep baseline tests free of real Gemini provider construction [tests/test_config.py:55]
+- [x] [Review][Patch] Surface an actionable optional-Django failure and remediation [streamlit_app.py:121]

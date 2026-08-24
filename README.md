@@ -6,8 +6,10 @@ they do not deliver, validate, or claim the FastAPI/MCP Core IA MVP.
 
 ## Supported Python and setup
 
-Use Python 3.12. Create a clean virtual environment from the repository root,
-then install the locked POC runtime and test inputs:
+Use Python 3.12 on Windows, macOS, or Linux. Create a clean virtual
+environment from the repository root, then install the locked POC runtime and
+test inputs. The lock uses standard platform markers for Windows-only
+dependencies.
 
 ```powershell
 python -m venv .venv
@@ -70,6 +72,11 @@ native installer error as evidence that the POC did not start. If Gemini is
 unavailable after configuration, keep the surfaced provider error as POC
 baseline evidence; do not represent it as an MVP result.
 
+If the optional Django URL is configured but its service is unavailable, the
+Streamlit action reports that it could not reach Django and asks you to verify
+`DJANGO_REPORT_URL` and the service. The report remains available locally; this
+is POC baseline evidence, not an MVP result.
+
 ## Fake-only baseline tests
 
 Run the isolated suite with:
@@ -87,5 +94,5 @@ documented POC runtime and report-path baseline.
 
 On 2026-08-23, this baseline was installed and checked on Windows with Python
 3.12.1. `pip check` reported no broken requirements, the fake-only suite
-reported 22 passing tests, the CLI displayed its missing-credential diagnostic,
+reported 24 passing tests, the CLI displayed its missing-credential diagnostic,
 and Streamlit reported version 1.62.0. This is POC baseline evidence only.

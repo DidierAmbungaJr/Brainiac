@@ -3,6 +3,7 @@ import builtins
 import pytest
 
 from src import config
+from src import conversation_report
 from src import main
 from src import multi_agent
 
@@ -56,12 +57,22 @@ def test_default_hierarchical_cli_factory_constructs_without_an_llm_call(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
-    clear_credentials(monkeypatch)
-    monkeypatch.setenv("GOOGLE_API_KEY", "baseline-test-key")
+    requested_roles: list[str | None] = []
+
+    class FakeModel:
+        stateful = False
+
+    def fake_create_model(role: str | None = None) -> FakeModel:
+        requested_roles.append(role)
+        return FakeModel()
+
+    monkeypatch.setattr(multi_agent, "create_model", fake_create_model)
+    monkeypatch.setattr(conversation_report, "create_model", fake_create_model)
 
     team = multi_agent.create_team(session_id="baseline-smoke", storage_dir=str(tmp_path))
 
     assert team.name == "supervisor"
+    assert requested_roles == ["researcher", "reporter", "supervisor"]
 
 
 @pytest.mark.parametrize(
