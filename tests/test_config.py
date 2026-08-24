@@ -1,151 +1,77 @@
-import builtins
+"""Tests for fail-fast Core IA service settings."""
+
+from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from src import config
-from src import conversation_report
-from src import main
-from src import multi_agent
+from src.config import get_settings, reset_settings_cache
 
 
-def clear_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+@pytest.fixture(autouse=True)
+def clear_settings_cache() -> None:
+    reset_settings_cache()
+    yield
+    reset_settings_cache()
 
 
-def test_create_model_requires_a_gemini_credential_before_provider_construction(
+def test_settings_loads_documented_service_values(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    clear_credentials(monkeypatch)
+    monkeypatch.setenv("SERVICE_NAME", "onbora-core-ia")
+    monkeypatch.setenv("ENVIRONMENT", "test")
 
-    def fail_if_constructed(**_: object) -> object:
-        raise AssertionError("GeminiModel must not be constructed without a credential")
+    settings = get_settings()
 
-    monkeypatch.setattr(config, "GeminiModel", fail_if_constructed)
-
-    with pytest.raises(RuntimeError, match="GOOGLE_API_KEY ou GEMINI_API_KEY est absente"):
-        config.create_model()
-
-
-def test_cli_surfaces_the_missing_credential_before_an_agent_call(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    clear_credentials(monkeypatch)
-    monkeypatch.setenv("BRAINIAC_AGENT_MODE", "simple")
-    monkeypatch.setattr(main, "create_agent", config.create_model)
-
-    main.main()
-
-    assert "Configuration invalide" in capsys.readouterr().out
-
-
-def test_cli_reaches_the_existing_poc_loop_with_an_injected_agent(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    monkeypatch.setenv("BRAINIAC_AGENT_MODE", "simple")
-    monkeypatch.setattr(main, "create_agent", lambda: object())
-    monkeypatch.setattr(builtins, "input", lambda _: "quit")
-
-    main.main()
-
-    assert "Brainiac est prêt" in capsys.readouterr().out
-
-
-def test_default_hierarchical_cli_factory_constructs_without_an_llm_call(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
-    requested_roles: list[str | None] = []
-
-    class FakeModel:
-        stateful = False
-
-    def fake_create_model(role: str | None = None) -> FakeModel:
-        requested_roles.append(role)
-        return FakeModel()
-
-    monkeypatch.setattr(multi_agent, "create_model", fake_create_model)
-    monkeypatch.setattr(conversation_report, "create_model", fake_create_model)
-
-    team = multi_agent.create_team(session_id="baseline-smoke", storage_dir=str(tmp_path))
-
-    assert team.name == "supervisor"
-    assert requested_roles == ["researcher", "reporter", "supervisor"]
+    assert settings.service_name == "onbora-core-ia"
+    assert settings.environment == "test"
 
 
 @pytest.mark.parametrize(
-    ("role", "environment_name"),
-    [
-        ("supervisor", "GEMINI_SUPERVISOR_MODEL"),
-        ("researcher", "GEMINI_RESEARCHER_MODEL"),
-        ("reporter", "GEMINI_REPORTER_MODEL"),
-    ],
+    "service_name",
+    [None, "", "   ", "a" * 101],
 )
-def test_create_model_prefers_google_key_and_uses_role_override(
+def test_settings_rejects_missing_blank_or_overlength_service_name(
     monkeypatch: pytest.MonkeyPatch,
-    role: str,
-    environment_name: str,
+    service_name: str | None,
 ) -> None:
-    captured: dict[str, object] = {}
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    if service_name is None:
+        monkeypatch.delenv("SERVICE_NAME", raising=False)
+    else:
+        monkeypatch.setenv("SERVICE_NAME", service_name)
 
-    def fake_gemini_model(**kwargs: object) -> object:
-        captured.update(kwargs)
-        return object()
-
-    monkeypatch.setenv("GOOGLE_API_KEY", "google-key")
-    monkeypatch.setenv("GEMINI_API_KEY", "fallback-key")
-    monkeypatch.setenv("GEMINI_MODEL", "default-model")
-    monkeypatch.setenv(environment_name, f"{role}-model")
-    monkeypatch.setenv("GEMINI_TEMPERATURE", "0.3")
-    monkeypatch.setenv("GEMINI_MAX_OUTPUT_TOKENS", "512")
-    monkeypatch.setattr(config, "GeminiModel", fake_gemini_model)
-
-    config.create_model(role=role)
-
-    assert captured["model_id"] == f"{role}-model"
-    assert captured["client_args"] == {"api_key": "google-key"}
-    assert captured["params"] == {
-        "temperature": 0.3,
-        "max_output_tokens": 512,
-        "top_p": 0.9,
-        "top_k": 40,
-    }
+    with pytest.raises(ValidationError):
+        get_settings()
 
 
-def test_create_model_uses_gemini_key_when_google_key_is_absent(
+def test_settings_rejects_missing_or_unsupported_environment(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, object] = {}
-    clear_credentials(monkeypatch)
-    monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
-    monkeypatch.setattr(config, "GeminiModel", lambda **kwargs: captured.update(kwargs))
+    monkeypatch.setenv("SERVICE_NAME", "onbora-core-ia")
+    monkeypatch.setenv("ENVIRONMENT", "staging")
 
-    config.create_model()
-
-    assert captured["client_args"] == {"api_key": "gemini-key"}
+    with pytest.raises(ValidationError):
+        get_settings()
 
 
-@pytest.mark.parametrize(
-    ("role", "environment_name"),
-    [
-        ("supervisor", "GEMINI_SUPERVISOR_MODEL"),
-        ("researcher", "GEMINI_RESEARCHER_MODEL"),
-        ("reporter", "GEMINI_REPORTER_MODEL"),
-    ],
-)
-def test_empty_role_override_falls_back_to_the_default_model(
+def test_settings_load_from_configured_env_file_outside_project_directory(
     monkeypatch: pytest.MonkeyPatch,
-    role: str,
-    environment_name: str,
+    tmp_path: Path,
 ) -> None:
-    captured: dict[str, object] = {}
-    monkeypatch.setenv("GOOGLE_API_KEY", "google-key")
-    monkeypatch.setenv("GEMINI_MODEL", "default-model")
-    monkeypatch.setenv(environment_name, "")
-    monkeypatch.setattr(config, "GeminiModel", lambda **kwargs: captured.update(kwargs))
+    environment_file = tmp_path / ".env"
+    environment_file.write_text(
+        "SERVICE_NAME=from-temp-env\nENVIRONMENT=test\n",
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("SERVICE_NAME", raising=False)
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
+    monkeypatch.setattr(config, "PROJECT_ENV_FILE", environment_file)
+    (tmp_path / "outside-project").mkdir()
+    monkeypatch.chdir(tmp_path / "outside-project")
 
-    config.create_model(role=role)
+    settings = get_settings()
 
-    assert captured["model_id"] == "default-model"
+    assert settings.service_name == "from-temp-env"
+    assert settings.environment == "test"
