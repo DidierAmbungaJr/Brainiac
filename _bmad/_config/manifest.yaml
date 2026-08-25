@@ -1,0 +1,23 @@
+installation:
+  version: 6.11.0
+  installDate: 2026-08-20T23:28:34.152Z
+  lastUpdated: 2026-08-20T23:28:34.152Z
+modules:
+  - name: core
+    version: 6.11.0
+    installDate: 2026-08-20T23:28:32.589Z
+    lastUpdated: 2026-08-20T23:28:34.151Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: bmm
+    version: 6.11.0
+    installDate: 2026-08-20T23:28:32.810Z
+    lastUpdated: 2026-08-20T23:28:34.152Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+ides:
+  - codex
+  - antigravity-cli
+  - antigravity

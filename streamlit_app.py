@@ -1,16 +1,16 @@
 import os
 import uuid
-import requests
 
 import streamlit as st
 
-from src.multi_agent import create_report_orchestrator, create_team
+from src.django_report import send_django_report
 from src.conversation_report import (
     generate_conversation_report,
     format_transcript,
     report_to_markdown,
     report_to_json,
 )
+from src.multi_agent import create_report_orchestrator, create_team
 from src.response import invoke_agent
 
 
@@ -120,8 +120,8 @@ with report_tab:
         )
         backend_url = os.getenv("DJANGO_REPORT_URL")
         if backend_url and st.button("Envoyer au backend Django", disabled=not approved):
-            response = requests.post(backend_url, json=st.session_state.conversation_report, timeout=20)
-            if response.ok:
-                st.success("Rapport envoyé au backend Django.")
+            delivery = send_django_report(backend_url, st.session_state.conversation_report)
+            if delivery.success:
+                st.success(delivery.message)
             else:
-                st.error(f"Le backend a répondu {response.status_code}.")
+                st.error(delivery.message)
